@@ -1,0 +1,5 @@
+chroma_db
+electrical_parts.db
+agentenv
+__pycache__
+.env
