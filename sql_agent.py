@@ -2,7 +2,8 @@ import chromadb
 import dspy
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
-
+from train_set import train_data
+import os
 
 load_dotenv()
 
@@ -28,7 +29,7 @@ def validate_sql_query(query: str) -> bool:
 def execute_sql(query: str):
     """Executes the SQL query in SQLite and fetches results."""
     try:
-        validate_sql_query(query)
+        # validate_sql_query(query)
         with create_db_connection() as conn:
             result = conn.execute(text(query)).fetchall()
         return result
@@ -67,12 +68,83 @@ class RetrieveSchema(dspy.Module):
 
 # DSPy Structured Output for SQL Generation
 class GenerateSQL(dspy.Signature):
-    """Generate a SQL query to answer the user's question.
-       Take in consideration the history of the conversation too for better results"""
+    """Generate appropriate response to the user's question about the database.
+        Dont just give tabular data, instead give in a meaningful polite sentence format with proper result and not just [result]
+    For SELECT queries: Generate SQL and answer.
+    For other operations: Return standard warning message."""
+    
     question: str = dspy.InputField()
     context: str = dspy.InputField()
-    history: list[str] = dspy.InputField()
-    sql_query: str = dspy.OutputField()
-    execution_result_observations: list = dspy.OutputField()
+    history: list[str] = dspy.InputField(default=[])
+    sql_query: str = dspy.OutputField(desc="Empty if operation not allowed")
     answer: str = dspy.OutputField()
 
+
+lm = dspy.LM('groq/qwen-2.5-32b', api_key=os.getenv('GROQ_API_KEY'))
+dspy.configure(lm=lm)
+
+
+# Define your ReAct module
+sql_query_generator = dspy.ReAct(GenerateSQL, tools=[execute_sql])
+
+# Define a wrapper module for optimization
+class SQLAgent(dspy.Module):
+    def __init__(self):
+        super().__init__()
+        self.retrieve = RetrieveSchema()
+        self.react = sql_query_generator
+        
+    def forward(self, question, context=None, history=None):
+        history = history or []
+        if context is None:
+            context = self.retrieve(question)
+            
+        response = self.react(question=question, context=context, history=history)
+        
+        # ReAct returns the full trace, we need to extract the final prediction
+        if hasattr(response, 'answer'):
+            return dspy.Prediction(
+                answer=response.answer,
+                sql_query=getattr(response, 'sql_query', '')
+            )
+        return dspy.Prediction(answer="Error: No valid response generated", sql_query="")
+    
+
+def validate_prediction(example, pred, trace=None):
+    try:
+        # For non-SELECT operations
+        if not example.sql_query:
+            return pred.answer.startswith("Sorry, but you are not allowed")
+        
+        # For SELECT queries
+        if not hasattr(pred, 'sql_query') or not pred.sql_query:
+            return False
+            
+        return (example.sql_query.lower().strip() == pred.sql_query.lower().strip() and 
+                example.answer.lower() in pred.answer.lower())
+    except Exception as e:
+        print(f"Validation error: {e}")
+        return False
+
+
+optimizer = dspy.BootstrapFewShot(
+    metric=validate_prediction,
+    max_bootstrapped_demos=8,
+    max_labeled_demos=8,
+    teacher_settings=dict(lm=dspy.LM('groq/qwen-2.5-32b', api_key=os.getenv('GROQ_API_KEY')))
+)
+
+agent = SQLAgent()
+
+# Optimize
+optimized_agent = optimizer.compile(
+    agent, 
+    trainset=train_data[:5]
+)
+
+# Save/Load
+optimized_agent.save('optimized_agent.json')
+
+# Usage remains the same
+response = optimized_agent("How many transformers are in stock?")
+print(response.answer)  # "Sorry, but you are not allowed..."

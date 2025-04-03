@@ -1,0 +1,149 @@
+{
+  "react.react": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "question": "Delete all customers who haven't placed an order in the last 6 months.",
+        "context": {},
+        "sql_query": "",
+        "answer": "Sorry, but you are not allowed to perform this operation."
+      },
+      {
+        "question": "Change the price of all products under $10 to $9.99.",
+        "context": {},
+        "sql_query": "",
+        "answer": "Sorry, but you are not allowed to perform this operation."
+      },
+      {
+        "question": "Add 5 new products to the database.",
+        "context": {},
+        "sql_query": "",
+        "answer": "Sorry, but you are not allowed to perform this operation."
+      },
+      {
+        "question": "I want to purchase LED Light Bulb 10W",
+        "context": {},
+        "sql_query": "",
+        "answer": "Sorry, but you are not allowed to perform this operation."
+      },
+      {
+        "question": "Place an order for 2 Copper Wire 10m",
+        "context": {},
+        "sql_query": "",
+        "answer": "Sorry, but you are not allowed to perform this operation."
+      }
+    ],
+    "signature": {
+      "instructions": "Generate appropriate response to the user's question about the database.\n    Dont just give tabular data, instead give in a meaningful polite sentence format\nFor SELECT queries: Generate SQL and answer.\nFor other operations: Return standard warning message.\n\nYou will be given `question`, `context`, `history` and your goal is to finish with `sql_query`, `answer`.\n\nTo do this, you will interleave Thought, Tool Name, and Tool Args, and receive a resulting Observation.\n\nThought can reason about the current situation, and Tool Name can be the following types:\n\n(1) execute_sql, whose description is <desc>Executes the SQL query in SQLite and fetches results.<\/desc>. It takes arguments {'query': {'type': 'string'}} in JSON format.\n(2) finish, whose description is <desc>Signals that the final outputs, i.e. `sql_query`, `answer`, are now available and marks the task as complete.<\/desc>. It takes arguments {'kwargs': 'Any'} in JSON format.",
+      "fields": [
+        {
+          "prefix": "Question:",
+          "description": "${question}"
+        },
+        {
+          "prefix": "Context:",
+          "description": "${context}"
+        },
+        {
+          "prefix": "History:",
+          "description": "${history}"
+        },
+        {
+          "prefix": "Trajectory:",
+          "description": "${trajectory}"
+        },
+        {
+          "prefix": "Next Thought:",
+          "description": "${next_thought}"
+        },
+        {
+          "prefix": "Next Tool Name:",
+          "description": "${next_tool_name}"
+        },
+        {
+          "prefix": "Next Tool Args:",
+          "description": "${next_tool_args}"
+        }
+      ]
+    },
+    "lm": null
+  },
+  "react.extract.predict": {
+    "traces": [],
+    "train": [],
+    "demos": [
+      {
+        "question": "I want to purchase LED Light Bulb 10W",
+        "context": {},
+        "sql_query": "",
+        "answer": "Sorry, but you are not allowed to perform this operation."
+      },
+      {
+        "question": "Add 5 new products to the database.",
+        "context": {},
+        "sql_query": "",
+        "answer": "Sorry, but you are not allowed to perform this operation."
+      },
+      {
+        "question": "Change the price of all products under $10 to $9.99.",
+        "context": {},
+        "sql_query": "",
+        "answer": "Sorry, but you are not allowed to perform this operation."
+      },
+      {
+        "question": "Place an order for 2 Copper Wire 10m",
+        "context": {},
+        "sql_query": "",
+        "answer": "Sorry, but you are not allowed to perform this operation."
+      },
+      {
+        "question": "Delete all customers who haven't placed an order in the last 6 months.",
+        "context": {},
+        "sql_query": "",
+        "answer": "Sorry, but you are not allowed to perform this operation."
+      }
+    ],
+    "signature": {
+      "instructions": "Generate appropriate response to the user's question about the database.\n    Dont just give tabular data, instead give in a meaningful polite sentence format\nFor SELECT queries: Generate SQL and answer.\nFor other operations: Return standard warning message.",
+      "fields": [
+        {
+          "prefix": "Question:",
+          "description": "${question}"
+        },
+        {
+          "prefix": "Context:",
+          "description": "${context}"
+        },
+        {
+          "prefix": "History:",
+          "description": "${history}"
+        },
+        {
+          "prefix": "Trajectory:",
+          "description": "${trajectory}"
+        },
+        {
+          "prefix": "Reasoning: Let's think step by step in order to",
+          "description": "${reasoning}"
+        },
+        {
+          "prefix": "Sql Query:",
+          "description": "Empty if operation not allowed"
+        },
+        {
+          "prefix": "Answer:",
+          "description": "${answer}"
+        }
+      ]
+    },
+    "lm": null
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.12",
+      "dspy": "2.6.14",
+      "cloudpickle": "3.1"
+    }
+  }
+}
